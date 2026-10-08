@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0c1524">
+  <title>Pulsantiera · Votazione istantanea</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="/vote" aria-label="Pulsantiera, schermata di voto">
+        <span class="brand-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span>PULSANTIERA<span class="brand-dot">.</span></span>
+      </a>
+      <div class="topbar-right">
+        <span id="connection" class="connection" role="status"><span class="connection-dot"></span> Connessione…</span>
+        <span class="topbar-divider"></span>
+        <span class="round-label">TURNO <strong id="round">01</strong></span>
+      </div>
+    </header>
+
+    <main id="main" class="main" aria-live="polite"></main>
+
+    <footer class="footer">
+      <span>UNA SCELTA. UN VOTO.</span>
+      <span id="footer-role">VOTAZIONE IN TEMPO REALE</span>
+    </footer>
+  </div>
+</body>
+</html>
