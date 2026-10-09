@@ -64,3 +64,19 @@ h1 { font: 600 clamp(43px, 6vw, 76px)/1.08 'Space Grotesk', sans-serif; letter-s
 @media (max-width: 760px) { .topbar { height: 82px; }.brand { font-size: 15px; gap: 10px; }.brand-icon { transform: rotate(-12deg) scale(.8); margin-left: -3px; }.connection { font-size: 0; gap: 0; }.connection-dot { width: 9px; height: 9px; }.topbar-right { gap: 15px; }.main { padding: 60px 0 72px; }.vote-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 42px; }.vote-button { min-height: 195px; padding: 20px; }.vote-name { font-size: 27px; }.results-head { align-items: flex-start; }.results-panel { padding: 8px 20px; }.result-row { grid-template-columns: 100px 1fr 42px; gap: 12px; min-height: 76px; }.result-name { font-size: 14px; gap: 9px; }.result-count { font-size: 25px; } }
 @media (max-width: 520px) { .shell { padding: 0 20px; }.round-label { font-size: 10px; }.round-label strong { font-size: 14px; margin-left: 4px; }.topbar-right { gap: 10px; }.brand { letter-spacing: .04em; }.main { justify-content: flex-start; }.vote-heading { padding-top: 8px; }.vote-grid { margin-top: 36px; }.vote-button { min-height: 175px; }.vote-name { font-size: 24px; }.intro { font-size: 16px; }.results-layout.waiting { padding-top: 38px; }.results-head { flex-direction: column; gap: 28px; }.total-box { text-align: left; }.result-row { grid-template-columns: 78px 1fr 32px; gap: 10px; }.result-dot { width: 10px; height: 10px; }.result-name { font-size: 12px; }.result-count { font-size: 22px; }.results-actions { flex-direction: column; align-items: stretch; }.results-actions .primary-button { width: 100%; }.footer { font-size: 9px; }.footer span:last-child { text-align: right; } }
 @media (prefers-reduced-motion: reduce) { *, *:before, *:after { transition-duration: .01ms !important; scroll-behavior: auto !important; } }
+
+/* Sessioni e accesso docente */
+.session-code { font-size: .75rem; font-weight: 700; letter-spacing: .08em; }
+.session-tools { display: flex; flex-wrap: wrap; align-items: center; gap: .7rem; margin-bottom: 2rem; }
+.session-tools strong { margin-right: .5rem; letter-spacing: .06em; }
+.session-tools button, .secondary-button { border: 1px solid #a9b7cd; border-radius: 8px; background: transparent; color: inherit; padding: .65rem .85rem; cursor: pointer; font: inherit; }
+.session-tools button:hover, .secondary-button:hover { border-color: #4284e8; }
+.session-tools small { flex-basis: 100%; opacity: .7; }
+.session-tools label { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; font-size: .85rem; }
+.session-form { display: flex; flex-wrap: wrap; align-items: center; gap: .9rem; margin: 1.5rem 0; }
+.session-form label { width: 100%; font-weight: 600; }
+.session-form .vote-help { width: 100%; }
+.session-form input, .session-tools input { min-width: 0; max-width: 18rem; padding: .8rem 1rem; border: 1px solid #9cabc3; border-radius: 8px; background: #fff; color: #0c1524; font: inherit; }
+.session-form [hidden] { display: none; }
+@media (max-width: 600px) { .session-code { font-size: .6rem; } .session-form { align-items: stretch; flex-direction: column; } }
+[hidden] { display: none !important; }

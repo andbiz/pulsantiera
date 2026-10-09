@@ -1,28 +1,28 @@
 # Pulsantiera di voto
 
-Webapp per votazioni istantanee su una rete condivisa, senza dipendenze esterne.
+Webapp per votazioni istantanee a quattro colori, senza dipendenze esterne. Richiede Node.js 18 o successivo.
 
 ## Avvio
-
-Serve Node.js 18 o successivo. Dalla cartella del progetto:
 
 ```bash
 npm start
 ```
 
-Apri `http://localhost:3000/vote` per votare e `http://localhost:3000/results` per controllare la votazione. Per usare altri dispositivi sulla stessa rete, sostituisci `localhost` con l'indirizzo IP del computer che esegue il server. Puoi impostare la porta con `PORT=4000 npm start`.
+Apri `http://localhost:3000/`, inserisci un codice di **4–24 lettere o cifre** (per esempio `CLASSE4A`) e premi **Crea sessione**. Il codice viene convertito in maiuscolo. Otterrai due indirizzi:
 
-La password docente viene stampata nel terminale all'avvio se non imposti `ADMIN_KEY`. Quando premi **Mostra risultati** o **Nuova votazione**, la pagina te la chiede e la ricorda nella scheda del browser per il resto della sessione. Per una password stabile, avvia con `ADMIN_KEY='una-password-lunga-e-casuale' npm start`.
+- `http://localhost:3000/vote/CLASSE4A` per votare;
+- `http://localhost:3000/results/CLASSE4A` per vedere i risultati e gestire i turni.
+
+I pulsanti **Copia link di voto** e **Copia link risultati** sono sulla pagina dei risultati. Salva i due URL nei bookmark. Quando crei una nuova sessione con **lo stesso codice**, i due URL restano uguali; i voti e il turno della sessione precedente vengono azzerati. Chi ha i link aperti vede il cambiamento in tempo reale. Codici diversi identificano sessioni indipendenti. Con un browser diverso sulla stessa rete, sostituisci `localhost` con l'indirizzo IP del server. Puoi scegliere una porta diversa con `PORT=4000 npm start`.
+
+Puoi aprire un bookmark anche se la sessione non è ancora attiva: la pagina indica che la sessione va ricreata e offre un collegamento al modulo con il codice già inserito. I dati restano soltanto nella memoria del server: dopo un riavvio devi creare di nuovo la sessione usando lo stesso codice. I bookmark rimangono validi. Avvia una sola istanza del servizio se vuoi che tutti gli utenti vedano la stessa sessione.
 
 ## Pubblicazione su Render
 
-1. Estrai l'archivio e carica **i file estratti** in un nuovo repository GitHub (la radice del repository deve contenere `server.js` e `package.json`). Non caricare la cartella `data/`.
-2. Su [Render](https://dashboard.render.com/), scegli **New → Web Service**, collega il repository e seleziona **Node**. Imposta **Build Command** su `npm install` e **Start Command** su `npm start`.
-3. In **Environment**, aggiungi `ADMIN_KEY` con una password lunga e segreta. Scegli il piano e avvia il deploy. Non inserire la password nei file caricati su GitHub.
-4. Il servizio avrà un indirizzo simile a `https://nome-app.onrender.com`. Condividi `https://nome-app.onrender.com/vote` con gli studenti e apri `https://nome-app.onrender.com/results` sul tuo dispositivo o sul proiettore. Entrambe le pagine sono pubbliche; solo i pulsanti che gestiscono il turno chiedono la password.
+Estrai i file e caricali in un repository GitHub, con `server.js` e `package.json` alla radice. Crea un Web Service Node su Render, imposta **Build Command** a `npm install` e **Start Command** a `npm start`. Apri la radice dell'indirizzo assegnato al servizio, crea una sessione e copia i link dalla pagina risultati. Se il servizio viene riavviato o sospeso, ricrea la sessione con lo stesso codice: i link non cambiano.
 
-**Per una lezione:** se scegli il piano gratuito, apri entrambe le pagine qualche minuto prima. Render può sospendere il servizio dopo 15 minuti senza traffico e il primo accesso successivo può richiedere circa un minuto. Nel piano gratuito i dati salvati sul disco del servizio si perdono a un riavvio o a un nuovo deploy: usalo per votazioni estemporanee, non per risultati da conservare. Per mantenere i dati serve un servizio con disco persistente o un database esterno.
+## Accesso e limiti
 
-Ogni browser può esprimere un voto per turno. Finché il turno è aperto, può cambiare scelta premendo un altro colore; il conteggio rimane di un solo voto. Nella schermata risultati, **Mostra risultati** chiude il voto e mostra i conteggi; **Nuova votazione** azzera i conteggi e riapre il turno. Le pagine si aggiornano in tempo reale. I dati sono salvati in `data/state.json` e sopravvivono al riavvio del server.
+Non ci sono password. Chiunque conosca un codice può ricavare **entrambi** gli URL sostituendo `/vote/` con `/results/`; può anche aprire la pagina risultati, cambiare i turni o ricreare la sessione con quel codice. La distinzione fra link serve alla comodità d'uso, non limita i permessi. Non usare l'app per votazioni che richiedono protezione da interventi di altri utenti.
 
-L'identificativo del votante è salvato nel browser e può essere aggirato usando un altro browser o cancellando i dati locali. La pagina risultati è visibile a tutti; la password protegge i comandi, non l'accesso alla pagina. Questa versione è adatta a votazioni informali, non a scrutinî con requisiti di identità o segretezza.
+Ogni browser può esprimere un voto per turno e cambiarlo mentre il voto è aperto. Si può aggirare il limite usando altri browser o cancellando i dati locali. I risultati si vedono dopo aver premuto **Mostra risultati**. Questa app è adatta a votazioni informali, non a scrutini con requisiti di identità o segretezza.
