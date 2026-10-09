@@ -4,6 +4,7 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const QRCode = require('qrcode');
 
 const PORT = Number(process.env.PORT || 3000);
 const HOST = process.env.HOST || '0.0.0.0';
@@ -62,12 +63,40 @@ const server = http.createServer(async (req, res) => {
     return json(res, 201, { code });
   }
 
-  const route = pathname.match(/^\/api\/s\/([A-Z0-9]{4,24})\/(state|events|vote|reveal|reset)$/);
+  const route = pathname.match(/^\/api\/s\/([A-Z0-9]{4,24})\/(state|events|vote|reveal|reset|qr)$/);
   if (route) {
     const [, code, action] = route;
     const session = sessions.get(code);
     if (!session) return json(res, 404, { error: 'Sessione non attiva. Ricreala usando lo stesso codice.' });
     if (req.method === 'GET' && action === 'state') return json(res, 200, snapshot(session));
+    if (req.method === 'GET' && action === 'qr') {
+      const requestUrl = new URL(req.url, 'http://localhost');
+      const targetValue = requestUrl.searchParams.get('target');
+      const host = req.headers['x-forwarded-host']?.split(',')[0].trim() || req.headers.host;
+      const forwardedProtocol = req.headers['x-forwarded-proto']?.split(',')[0].trim();
+      const protocol = forwardedProtocol === 'https' || req.socket.encrypted ? 'https' : 'http';
+      let target;
+      try {
+        target = new URL(targetValue);
+        const origin = new URL(`${protocol}://${host}`).origin;
+        if (target.origin !== origin || target.pathname !== `/vote/${code}` ||
+            target.search || target.hash || target.username || target.password) {
+          return json(res, 400, { error: 'Indirizzo del QR code non valido' });
+        }
+      } catch {
+        return json(res, 400, { error: 'Indirizzo del QR code non valido' });
+      }
+      try {
+        const image = await QRCode.toBuffer(target.href, { width: 320, margin: 2 });
+        res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'no-store',
+          'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer' });
+        res.end(image);
+      } catch (error) {
+        console.error('QR code generation failed:', error);
+        json(res, 500, { error: 'Impossibile generare il QR code' });
+      }
+      return;
+    }
     if (req.method === 'GET' && action === 'events') {
       res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8',
         'Cache-Control': 'no-cache, no-transform', 'Connection': 'keep-alive',
