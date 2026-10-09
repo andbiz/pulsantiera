@@ -9,17 +9,19 @@ const QRCode = require('qrcode');
 const PORT = Number(process.env.PORT || 3000);
 const HOST = process.env.HOST || '0.0.0.0';
 const COLORS = ['verde', 'giallo', 'rosso', 'blu'];
+const LABEL_MAX = 40;
 const CODE_PATTERN = /^[A-Z0-9]{4,24}$/;
 const sessions = new Map();
 const clients = new Map();
 
-function initialState() { return { instance: crypto.randomUUID(), round: 1, mode: 'waiting', votes: {} }; }
+function initialState() { return { instance: crypto.randomUUID(), round: 1, mode: 'waiting', votes: {},
+  labels: Object.fromEntries(COLORS.map(color => [color, ''])) }; }
 function snapshot(session) {
   const counts = Object.fromEntries(COLORS.map(color => [color, 0]));
   if (session.mode === 'showing') {
     for (const color of Object.values(session.votes)) if (Object.hasOwn(counts, color)) counts[color]++;
   }
-  return { instance: session.instance, round: session.round, mode: session.mode, counts,
+  return { instance: session.instance, round: session.round, mode: session.mode, counts, labels: session.labels,
     total: Object.values(counts).reduce((sum, count) => sum + count, 0) };
 }
 function json(res, status, data) {
@@ -55,7 +57,10 @@ const server = http.createServer(async (req, res) => {
     if (!CODE_PATTERN.test(code)) {
       return json(res, 400, { error: 'Usa da 4 a 24 lettere o numeri, senza spazi o simboli.' });
     }
-    if (!sessions.has(code) && sessions.size >= 10000) {
+    if (sessions.has(code)) {
+      return json(res, 409, { error: 'Questo nome di sessione esiste già. Scegline un altro.' });
+    }
+    if (sessions.size >= 10000) {
       return json(res, 503, { error: 'Limite di sessioni raggiunto' });
     }
     sessions.set(code, initialState());
@@ -63,7 +68,7 @@ const server = http.createServer(async (req, res) => {
     return json(res, 201, { code });
   }
 
-  const route = pathname.match(/^\/api\/s\/([A-Z0-9]{4,24})\/(state|events|vote|reveal|reset|qr)$/);
+  const route = pathname.match(/^\/api\/s\/([A-Z0-9]{4,24})\/(state|events|vote|reveal|reset|labels|qr)$/);
   if (route) {
     const [, code, action] = route;
     const session = sessions.get(code);
@@ -107,7 +112,7 @@ const server = http.createServer(async (req, res) => {
       req.on('close', () => { clients.get(code)?.delete(res); if (!clients.get(code)?.size) clients.delete(code); });
       return;
     }
-    if (req.method === 'POST' && ['vote', 'reveal', 'reset'].includes(action)) {
+    if (req.method === 'POST' && ['vote', 'reveal', 'reset', 'labels'].includes(action)) {
       let body;
       try { body = await readBody(req); }
       catch (error) { if (!res.destroyed) json(res, 400, { error: error.message }); return; }
@@ -127,12 +132,21 @@ const server = http.createServer(async (req, res) => {
         if (typeof body.voterId !== 'string' || !/^[a-f0-9-]{36}$/.test(body.voterId) ||
             !COLORS.includes(body.color)) return json(res, 400, { error: 'Voto non valido' });
         nextState = { ...active, votes: { ...active.votes, [body.voterId]: body.color } };
+      } else if (action === 'labels') {
+        if (active.mode !== 'waiting') return json(res, 409, { error: 'Le etichette si modificano prima del voto' });
+        const input = body.labels;
+        if (!input || typeof input !== 'object' || Array.isArray(input) ||
+            COLORS.some(color => typeof input[color] !== 'string')) {
+          return json(res, 400, { error: 'Etichette non valide' });
+        }
+        nextState = { ...active, labels: Object.fromEntries(COLORS.map(color => [color, input[color].trim().slice(0, LABEL_MAX)])) };
       } else if (action === 'reveal') {
         if (active.mode !== 'waiting') return json(res, 409, { error: 'Risultati già visibili' });
         nextState = { ...active, mode: 'showing' };
       } else {
         if (active.mode !== 'showing') return json(res, 409, { error: 'Il turno è già aperto' });
-        nextState = { ...active, round: active.round + 1, mode: 'waiting', votes: {} };
+        nextState = { ...active, round: active.round + 1, mode: 'waiting', votes: {},
+          labels: initialState().labels };
       }
       sessions.set(code, nextState);
       broadcast(code);
